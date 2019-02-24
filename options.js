@@ -109,16 +109,26 @@ function populateSubmissionInfo(rootNode, handle) {
                         const uniqueACDiv = constructDiv('Total Unique Solve: ' + okaySubmissionSet.size);
                         rootNode.appendChild(uniqueACDiv);
 
+                        // Add verdict count table
                         const verdictHeaderDiv = constructDiv('Verdict Table');
                         verdictHeaderDiv.style.color = "#F5AE20";
                         rootNode.appendChild(verdictHeaderDiv);
-                        const submissionTypeDiv = constructTable(submissionTypeMap);
+                        const submissionTypeArray = Array.from(submissionTypeMap);
+                        submissionTypeArray.sort((a, b) => {
+                            return a[1] - b[1];
+                        });
+                        const submissionTypeDiv = constructTable(submissionTypeArray);
                         rootNode.appendChild(submissionTypeDiv);
 
+                        // Add category-wise solves table
                         const categoryHeaderDiv = constructDiv('Category-wise Solves');
                         categoryHeaderDiv.style.color = "#F5AE20";
                         rootNode.appendChild(categoryHeaderDiv);
-                        const problemCategoryDiv = constructTable(problemCategoryMap);
+                        const problemCategoryArray = Array.from(problemCategoryMap);
+                        problemCategoryArray.sort((a, b) => {
+                            return a[1] - b[1];
+                        });
+                        const problemCategoryDiv = constructTable(problemCategoryArray);
                         rootNode.appendChild(problemCategoryDiv);                        
                     }
                 } else {
