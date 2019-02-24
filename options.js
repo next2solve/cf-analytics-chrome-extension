@@ -76,6 +76,7 @@ function populateSubmissionInfo(rootNode, handle) {
     let submissionsLeft = true;
     const okaySubmissionSet = new Set([]);
     const submissionTypeMap = new Map([]);
+    const problemCategoryMap = new Map([]);
 
     function lazyConstruction(startSubmision) {
         const xhr = new XMLHttpRequest();
@@ -98,12 +99,24 @@ function populateSubmissionInfo(rootNode, handle) {
                             const uniqueACDiv = constructDiv(verdict + ': ' + count);
                             rootNode.appendChild(uniqueACDiv);
                         }
+
+                        for (const [category, count] of problemCategoryMap) {
+                            const uniqueACDiv = constructDiv(category + ': ' + count);
+                            rootNode.appendChild(uniqueACDiv);
+                        }
                     }
                 } else {
                     jsonObj.result.forEach(submission => {
                         if (submission.verdict === 'OK') {
                             if (!okaySubmissionSet.has(submission.problem.name)) {
                                 okaySubmissionSet.add(submission.problem.name);
+                                submission.problem.tags.forEach(tag => {
+                                    if (problemCategoryMap.has(tag)) {
+                                        problemCategoryMap.set(tag, 1 + problemCategoryMap.get(tag));
+                                    } else {
+                                        problemCategoryMap.set(tag, 1);
+                                    }
+                                });
                             }
                         }
                         if (submissionTypeMap.has(submission.verdict)) {
