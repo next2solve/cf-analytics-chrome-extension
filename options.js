@@ -76,7 +76,7 @@ function populateBasicInfo(rootNode, handle) {
             const maxRankDiv = constructDiv('Max. Rank: ' + jsonObj.result[0].maxRank);
             rootNode.appendChild(maxRankDiv);
         } else {
-            console.log(xhr.response);
+            // State has changed but not done yet
         }
     }
 }
@@ -154,7 +154,7 @@ function populateSubmissionInfo(rootNode, handle) {
                     lazyConstruction(startSubmision + chunkSize);
                 }
             } else {
-                console.log(xhr.response);
+                // State has changed but not done yet
             }
         }
     }
