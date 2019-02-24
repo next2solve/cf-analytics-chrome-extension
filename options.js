@@ -31,6 +31,20 @@ function constructDiv(content) {
     return newDiv;
 }
 
+function constructTable(contentMap) {
+    const newTable = document.createElement('table');
+
+    for (const [key, value] of contentMap) {
+        const row = newTable.insertRow(0);
+        const cell1 = row.insertCell(0);
+        const cell2 = row.insertCell(1);
+        cell1.innerHTML = key;
+        cell2.innerHTML = value;
+    }
+    
+    return newTable;
+}
+
 function addImage(src) {
     const img = document.createElement('img');
     img.src = src;
@@ -95,15 +109,17 @@ function populateSubmissionInfo(rootNode, handle) {
                         const uniqueACDiv = constructDiv('Total Unique Solve: ' + okaySubmissionSet.size);
                         rootNode.appendChild(uniqueACDiv);
 
-                        for (const [verdict, count] of submissionTypeMap) {
-                            const uniqueACDiv = constructDiv(verdict + ': ' + count);
-                            rootNode.appendChild(uniqueACDiv);
-                        }
+                        const verdictHeaderDiv = constructDiv('Verdict Table');
+                        verdictHeaderDiv.style.color = "#F5AE20";
+                        rootNode.appendChild(verdictHeaderDiv);
+                        const submissionTypeDiv = constructTable(submissionTypeMap);
+                        rootNode.appendChild(submissionTypeDiv);
 
-                        for (const [category, count] of problemCategoryMap) {
-                            const uniqueACDiv = constructDiv(category + ': ' + count);
-                            rootNode.appendChild(uniqueACDiv);
-                        }
+                        const categoryHeaderDiv = constructDiv('Category-wise Solves');
+                        categoryHeaderDiv.style.color = "#F5AE20";
+                        rootNode.appendChild(categoryHeaderDiv);
+                        const problemCategoryDiv = constructTable(problemCategoryMap);
+                        rootNode.appendChild(problemCategoryDiv);                        
                     }
                 } else {
                     jsonObj.result.forEach(submission => {
