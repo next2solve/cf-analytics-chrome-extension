@@ -112,6 +112,8 @@ function populateSubmissionInfo(rootNode, handle) {
                         // Add verdict count table
                         const verdictHeaderDiv = constructDiv('Verdict Table');
                         verdictHeaderDiv.style.color = "#F5AE20";
+                        verdictHeaderDiv.style.textAlign = "center";
+                        verdictHeaderDiv.style.fontSize = "large";
                         rootNode.appendChild(verdictHeaderDiv);
                         const submissionTypeArray = Array.from(submissionTypeMap);
                         submissionTypeArray.sort((a, b) => {
@@ -123,6 +125,8 @@ function populateSubmissionInfo(rootNode, handle) {
                         // Add category-wise solves table
                         const categoryHeaderDiv = constructDiv('Category-wise Solves');
                         categoryHeaderDiv.style.color = "#F5AE20";
+                        categoryHeaderDiv.style.textAlign = "center";
+                        categoryHeaderDiv.style.fontSize = "large";
                         rootNode.appendChild(categoryHeaderDiv);
                         const problemCategoryArray = Array.from(problemCategoryMap);
                         problemCategoryArray.sort((a, b) => {
