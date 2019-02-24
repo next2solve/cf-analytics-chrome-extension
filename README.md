@@ -5,6 +5,5 @@
 - Check the box next to Developer Mode.
 - Click Load Unpacked Extension and select the directory for `cf-analytics` extension.
 - Click on the extension icon
-- Select `Options`
 - Put a Codeforces `Handle` and hit `Submit`
 - Sit back, relax and grab yourself a beverage
