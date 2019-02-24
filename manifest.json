@@ -1,12 +1,20 @@
 {
-    "name": "Getting Started Example",
+    "name": "Codeforces Analytics",
     "version": "1.0",
-    "description": "Build an Extension!",
+    "description": "Get Set Go",
     "permissions": [ "contextMenus", "activeTab", "declarativeContent", "storage" ],
     "options_page": "options.html",
     "background": {
         "scripts": ["background.js"],
         "persistent": false
+    },
+    "page_action": {
+        "default_icon": {
+            "16": "images/logo.png",
+            "32": "images/logo.png",
+            "48": "images/logo.png",
+            "128": "images/logo.png"
+        }
     },
     "manifest_version": 2
 }
