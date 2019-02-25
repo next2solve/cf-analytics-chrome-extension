@@ -25,7 +25,7 @@ function clearNode(node) {
 }
 
 function constructDiv(content) {
-    const newDiv = document.createElement('div'); 
+    const newDiv = document.createElement('div');
     const newContent = document.createTextNode(content);
     newDiv.appendChild(newContent);
     return newDiv;
@@ -41,7 +41,7 @@ function constructTable(contentMap) {
         cell1.innerHTML = key;
         cell2.innerHTML = value;
     }
-    
+
     return newTable;
 }
 
@@ -51,10 +51,10 @@ function addImage(src) {
     return img;
 }
 
-handleSubmit.onclick = function constructProfile() {
+handleSubmit.onclick = function constructProfile(e) {
+    e.preventDefault();
     const rootNode = document.getElementById('profileDiv');
     clearNode(rootNode);
-
     const handle = handleEntry.value;
     populateBasicInfo(rootNode, handle);
     populateSubmissionInfo(rootNode, handle);
@@ -95,11 +95,19 @@ function populateSubmissionInfo(rootNode, handle) {
     function lazyConstruction(startSubmision) {
         const xhr = new XMLHttpRequest();
         xhr.open('GET', SUBMISSION_INFO_REQUEST +
-                        handle +
-                        createString('&from=', startSubmision) +
-                        createString('&count=', chunkSize), true);
+            handle +
+            createString('&from=', startSubmision) +
+            createString('&count=', chunkSize), true);
         xhr.send();
         xhr.onreadystatechange = () => {
+
+            if (xhr.readyState === STATE.DONE && xhr.status === STATUS.UNSENT) {
+                const noUserDiv = constructDiv('NO USER FOUND!');
+                noUserDiv.className += 'error-text';
+                rootNode.appendChild(noUserDiv);
+                return;
+            }
+
             if (xhr.readyState === STATE.DONE && xhr.status === STATUS.DONE) {
                 const jsonObj = JSON.parse(xhr.response);
                 if (jsonObj.result.length === 0) {
@@ -114,6 +122,7 @@ function populateSubmissionInfo(rootNode, handle) {
                         verdictHeaderDiv.style.color = "#F5AE20";
                         verdictHeaderDiv.style.textAlign = "center";
                         verdictHeaderDiv.style.fontSize = "large";
+                        verdictHeaderDiv.className += 'margin-top20';
                         rootNode.appendChild(verdictHeaderDiv);
                         const submissionTypeArray = Array.from(submissionTypeMap);
                         submissionTypeArray.sort((a, b) => {
@@ -127,13 +136,14 @@ function populateSubmissionInfo(rootNode, handle) {
                         categoryHeaderDiv.style.color = "#F5AE20";
                         categoryHeaderDiv.style.textAlign = "center";
                         categoryHeaderDiv.style.fontSize = "large";
+                        categoryHeaderDiv.className += 'margin-top20';
                         rootNode.appendChild(categoryHeaderDiv);
                         const problemCategoryArray = Array.from(problemCategoryMap);
                         problemCategoryArray.sort((a, b) => {
                             return a[1] - b[1];
                         });
                         const problemCategoryDiv = constructTable(problemCategoryArray);
-                        rootNode.appendChild(problemCategoryDiv);                        
+                        rootNode.appendChild(problemCategoryDiv);
                     }
                 } else {
                     jsonObj.result.forEach(submission => {
