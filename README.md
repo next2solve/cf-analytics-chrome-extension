@@ -1,5 +1,4 @@
-### How to Use
-
+### User Guide
 - Clone or download this repo
 - Navigate to chrome://extensions in your browser (is the name necessary?). You can also access this page by clicking on the Chrome menu on the top right side of the Omnibox, hovering over More Tools and selecting Extensions.
 - Check the box next to Developer Mode.
