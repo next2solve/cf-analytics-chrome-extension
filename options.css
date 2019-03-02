@@ -3,13 +3,13 @@
     src: url(cour.ttf) format('ttf');
 }
 
-html{
+html {
     font-family: Courier, 'Courier New', monospace;
 }
 
-div{
+div {
     font-size: 14px;
-    margin-bottom:8px;
+    margin-bottom: 8px;
 }
 
 .body-container {
@@ -160,7 +160,8 @@ tr:nth-child(even) {
 }
 
 .image-div {
-    width:auto;
-    height:200px;
-    padding:8px; 
+    width: auto;
+    height: 200px;
+    padding: 8px; 
 }
+
