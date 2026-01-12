@@ -46,9 +46,13 @@ function constructTable(contentMap) {
 }
 
 function addImage(src) {
+    const imageDiv = constructDiv('');
+    imageDiv.classList.add('flex-container-wrap');
     const img = document.createElement('img');
     img.src = src;
-    return img;
+    img.classList.add('image-div');
+    imageDiv.appendChild(img);
+    return imageDiv;
 }
 
 handleSubmit.onclick = function constructProfile(e) {
@@ -113,7 +117,6 @@ function populateSubmissionInfo(rootNode, handle) {
                 if (jsonObj.result.length === 0) {
                     if (submissionsLeft === true) {
                         submissionsLeft = false;
-
                         const uniqueACDiv = constructDiv('Total Unique Solve: ' + okaySubmissionSet.size);
                         rootNode.appendChild(uniqueACDiv);
 
