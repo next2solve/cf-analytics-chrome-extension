@@ -2,16 +2,15 @@
     "name": "Codeforces Analytics",
     "version": "1.0",
     "description": "Get Set Go",
-    "permissions": [ "contextMenus", "activeTab", "declarativeContent", "storage" ],
+    "permissions": [ "contextMenus", "activeTab", "storage" ],
     "options_page": "options.html",
     "background": {
-        "scripts": ["background.js"],
-        "persistent": false
+        "service_worker": "background.js"
     },
-    "browser_action": {
+    "action": {
         "default_icon": "images/logo.png",
         "default_popup": "options.html",
         "default_title": "Codeforces Analytics"
     },
-    "manifest_version": 2
+    "manifest_version": 3
 }
