@@ -1,22 +1,101 @@
 'use strict';
 
-const STATE = {
-    UNSENT: 0,
-    OPENED: 1,
-    HEADERS_RECEIVED: 2,
-    LOADING: 3,
-    DONE: 4
-}
+const API_BASE = 'https://codeforces.com/api';
+const PROFILE_INFO_REQUEST = `${API_BASE}/user.info?handles=`;
+const SUBMISSION_INFO_REQUEST = `${API_BASE}/user.status?handle=`;
 
-const STATUS = {
-    UNSENT: 0,
-    OPENED: 0,
-    LOADING: 200,
-    DONE: 200
+// Codeforces Rank Colors
+const RANK_COLORS = {
+    'newbie': {
+        primary: '#808080',
+        secondary: '#999999',
+        gradient: 'linear-gradient(135deg, #808080 0%, #999999 100%)'
+    },
+    'pupil': {
+        primary: '#008000',
+        secondary: '#00a000',
+        gradient: 'linear-gradient(135deg, #008000 0%, #00a000 100%)'
+    },
+    'specialist': {
+        primary: '#03a89e',
+        secondary: '#00c9be',
+        gradient: 'linear-gradient(135deg, #03a89e 0%, #00c9be 100%)'
+    },
+    'expert': {
+        primary: '#0000ff',
+        secondary: '#4444ff',
+        gradient: 'linear-gradient(135deg, #0000ff 0%, #4444ff 100%)'
+    },
+    'candidate master': {
+        primary: '#a000a0',
+        secondary: '#c040c0',
+        gradient: 'linear-gradient(135deg, #a000a0 0%, #c040c0 100%)'
+    },
+    'master': {
+        primary: '#ff8c00',
+        secondary: '#ffaa00',
+        gradient: 'linear-gradient(135deg, #ff8c00 0%, #ffaa00 100%)'
+    },
+    'international master': {
+        primary: '#ff8c00',
+        secondary: '#ffaa00',
+        gradient: 'linear-gradient(135deg, #ff8c00 0%, #ffaa00 100%)'
+    },
+    'grandmaster': {
+        primary: '#ff0000',
+        secondary: '#ff4444',
+        gradient: 'linear-gradient(135deg, #ff0000 0%, #ff4444 100%)'
+    },
+    'international grandmaster': {
+        primary: '#ff0000',
+        secondary: '#ff4444',
+        gradient: 'linear-gradient(135deg, #ff0000 0%, #ff4444 100%)'
+    },
+    'legendary grandmaster': {
+        primary: '#ff0000',
+        secondary: '#ff4444',
+        gradient: 'linear-gradient(135deg, #ff0000 0%, #ff4444 100%)'
+    },
+    'default': {
+        primary: '#667eea',
+        secondary: '#764ba2',
+        gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    }
 };
 
-const PROFILE_INFO_REQUEST = 'http://codeforces.com/api/user.info?handles=';
-const SUBMISSION_INFO_REQUEST = 'http://codeforces.com/api/user.status?handle=';
+// DOM Elements
+const searchForm = document.getElementById('searchForm');
+const handleInput = document.getElementById('handleEntry');
+const submitButton = document.getElementById('handleSubmit');
+const loadingState = document.getElementById('loadingState');
+const errorState = document.getElementById('errorState');
+const profileDiv = document.getElementById('profileDiv');
+
+// Utility Functions
+function showLoading() {
+    loadingState.style.display = 'block';
+    errorState.style.display = 'none';
+    profileDiv.style.display = 'none';
+    submitButton.disabled = true;
+}
+
+function hideLoading() {
+    loadingState.style.display = 'none';
+    submitButton.disabled = false;
+}
+
+function showError(message) {
+    hideLoading();
+    errorState.style.display = 'block';
+    errorState.querySelector('.error-message').textContent = message;
+    profileDiv.style.display = 'none';
+}
+
+function showProfile() {
+    hideLoading();
+    errorState.style.display = 'none';
+    profileDiv.style.display = 'block';
+}
 
 function clearNode(node) {
     while (node.firstChild) {
@@ -24,154 +103,247 @@ function clearNode(node) {
     }
 }
 
-function constructDiv(content) {
-    const newDiv = document.createElement('div');
-    const newContent = document.createTextNode(content);
-    newDiv.appendChild(newContent);
-    return newDiv;
+function createElement(tag, className, content) {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    if (content) element.textContent = content;
+    return element;
 }
 
-function constructTable(contentMap) {
-    const newTable = document.createElement('table');
+// This function is no longer needed as colors are applied directly during render
 
-    for (const [key, value] of contentMap) {
-        const row = newTable.insertRow(0);
-        const cell1 = row.insertCell(0);
-        const cell2 = row.insertCell(1);
-        cell1.innerHTML = key;
-        cell2.innerHTML = value;
-    }
-
-    return newTable;
-}
-
-function addImage(src) {
-    const img = document.createElement('img');
-    img.src = src;
-    return img;
-}
-
-handleSubmit.onclick = function constructProfile(e) {
+// Event Handlers
+searchForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const rootNode = document.getElementById('profileDiv');
-    clearNode(rootNode);
-    const handle = handleEntry.value;
-    populateBasicInfo(rootNode, handle);
-    populateSubmissionInfo(rootNode, handle);
+    const handle = handleInput.value.trim();
+
+    if (!handle) {
+        showError('Please enter a Codeforces handle');
+        return;
+    }
+
+    clearNode(profileDiv);
+    showLoading();
+
+    try {
+        await loadProfile(handle);
+    } catch (error) {
+        showError(error.message || 'Failed to load profile. Please try again.');
+    }
+});
+
+// API Functions
+async function fetchUserInfo(handle) {
+    const response = await fetch(PROFILE_INFO_REQUEST + handle);
+    const data = await response.json();
+
+    if (data.status !== 'OK') {
+        throw new Error('User not found. Please check the handle and try again.');
+    }
+
+    return data.result[0];
 }
 
-function populateBasicInfo(rootNode, handle) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', PROFILE_INFO_REQUEST + handle, true);
-    xhr.send();
+async function fetchSubmissions(handle) {
+    const response = await fetch(SUBMISSION_INFO_REQUEST + handle);
+    const data = await response.json();
 
-    xhr.onreadystatechange = () => {
-        if (xhr.readyState === STATE.DONE && xhr.status === STATUS.DONE) {
-            const jsonObj = JSON.parse(xhr.response);
-            rootNode.appendChild(addImage('https:' + jsonObj.result[0].titlePhoto));
-            const ratingDiv = constructDiv('Rating: ' + jsonObj.result[0].rating);
-            rootNode.appendChild(ratingDiv);
-            const maxRatingDiv = constructDiv('Max. Rating: ' + jsonObj.result[0].maxRating);
-            rootNode.appendChild(maxRatingDiv);
-            const maxRankDiv = constructDiv('Max. Rank: ' + jsonObj.result[0].maxRank);
-            rootNode.appendChild(maxRankDiv);
-        } else {
-            // State has changed but not done yet
-        }
+    if (data.status !== 'OK') {
+        throw new Error('Failed to fetch submissions');
+    }
+
+    return data.result;
+}
+
+// Main Profile Loading Function
+async function loadProfile(handle) {
+    try {
+        // Fetch user info and submissions in parallel
+        const [userInfo, submissions] = await Promise.all([
+            fetchUserInfo(handle),
+            fetchSubmissions(handle)
+        ]);
+
+        // Process submissions data
+        const stats = processSubmissions(submissions);
+
+        // Render profile
+        renderProfile(userInfo, stats);
+        showProfile();
+    } catch (error) {
+        showError(error.message);
     }
 }
 
-function createString(key, value) {
-    return key + value;
-}
+// Process Submissions
+function processSubmissions(submissions) {
+    const uniqueSolves = new Set();
+    const verdictMap = new Map();
+    const categoryMap = new Map();
 
-function populateSubmissionInfo(rootNode, handle) {
-    const chunkSize = 500;
-    let submissionsLeft = true;
-    const okaySubmissionSet = new Set([]);
-    const submissionTypeMap = new Map([]);
-    const problemCategoryMap = new Map([]);
+    submissions.forEach(submission => {
+        // Count verdicts
+        const verdict = submission.verdict;
+        verdictMap.set(verdict, (verdictMap.get(verdict) || 0) + 1);
 
-    function lazyConstruction(startSubmision) {
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', SUBMISSION_INFO_REQUEST +
-            handle +
-            createString('&from=', startSubmision) +
-            createString('&count=', chunkSize), true);
-        xhr.send();
-        xhr.onreadystatechange = () => {
+        // Count unique AC problems and categories
+        if (verdict === 'OK') {
+            const problemKey = `${submission.problem.contestId}-${submission.problem.index}`;
+            if (!uniqueSolves.has(problemKey)) {
+                uniqueSolves.add(problemKey);
 
-            if (xhr.readyState === STATE.DONE && xhr.status === STATUS.UNSENT) {
-                const noUserDiv = constructDiv('NO USER FOUND!');
-                noUserDiv.className += 'error-text';
-                rootNode.appendChild(noUserDiv);
-                return;
-            }
-
-            if (xhr.readyState === STATE.DONE && xhr.status === STATUS.DONE) {
-                const jsonObj = JSON.parse(xhr.response);
-                if (jsonObj.result.length === 0) {
-                    if (submissionsLeft === true) {
-                        submissionsLeft = false;
-
-                        const uniqueACDiv = constructDiv('Total Unique Solve: ' + okaySubmissionSet.size);
-                        rootNode.appendChild(uniqueACDiv);
-
-                        // Add verdict count table
-                        const verdictHeaderDiv = constructDiv('Verdict Table');
-                        verdictHeaderDiv.style.color = "#F5AE20";
-                        verdictHeaderDiv.style.textAlign = "center";
-                        verdictHeaderDiv.style.fontSize = "large";
-                        verdictHeaderDiv.className += 'margin-top20';
-                        rootNode.appendChild(verdictHeaderDiv);
-                        const submissionTypeArray = Array.from(submissionTypeMap);
-                        submissionTypeArray.sort((a, b) => {
-                            return a[1] - b[1];
-                        });
-                        const submissionTypeDiv = constructTable(submissionTypeArray);
-                        rootNode.appendChild(submissionTypeDiv);
-
-                        // Add category-wise solves table
-                        const categoryHeaderDiv = constructDiv('Category-wise Solves');
-                        categoryHeaderDiv.style.color = "#F5AE20";
-                        categoryHeaderDiv.style.textAlign = "center";
-                        categoryHeaderDiv.style.fontSize = "large";
-                        categoryHeaderDiv.className += 'margin-top20';
-                        rootNode.appendChild(categoryHeaderDiv);
-                        const problemCategoryArray = Array.from(problemCategoryMap);
-                        problemCategoryArray.sort((a, b) => {
-                            return a[1] - b[1];
-                        });
-                        const problemCategoryDiv = constructTable(problemCategoryArray);
-                        rootNode.appendChild(problemCategoryDiv);
-                    }
-                } else {
-                    jsonObj.result.forEach(submission => {
-                        if (submission.verdict === 'OK') {
-                            if (!okaySubmissionSet.has(submission.problem.name)) {
-                                okaySubmissionSet.add(submission.problem.name);
-                                submission.problem.tags.forEach(tag => {
-                                    if (problemCategoryMap.has(tag)) {
-                                        problemCategoryMap.set(tag, 1 + problemCategoryMap.get(tag));
-                                    } else {
-                                        problemCategoryMap.set(tag, 1);
-                                    }
-                                });
-                            }
-                        }
-                        if (submissionTypeMap.has(submission.verdict)) {
-                            submissionTypeMap.set(submission.verdict, 1 + submissionTypeMap.get(submission.verdict));
-                        } else {
-                            submissionTypeMap.set(submission.verdict, 1);
-                        }
+                // Count categories for unique solves only
+                if (submission.problem.tags) {
+                    submission.problem.tags.forEach(tag => {
+                        categoryMap.set(tag, (categoryMap.get(tag) || 0) + 1);
                     });
-                    lazyConstruction(startSubmision + chunkSize);
                 }
-            } else {
-                // State has changed but not done yet
             }
         }
+    });
+
+    return {
+        uniqueSolves: uniqueSolves.size,
+        verdicts: Array.from(verdictMap.entries()).sort((a, b) => b[1] - a[1]),
+        categories: Array.from(categoryMap.entries()).sort((a, b) => b[1] - a[1]),
+        totalSubmissions: submissions.length
+    };
+}
+
+// Render Profile
+function renderProfile(userInfo, stats) {
+    clearNode(profileDiv);
+
+    // Get rank colors
+    const rankLower = userInfo.rank ? userInfo.rank.toLowerCase() : '';
+    const colors = RANK_COLORS[rankLower] || RANK_COLORS['default'];
+
+    // Profile Header
+    const header = createElement('div', 'profile-header');
+
+    // Profile Photo - FIX: Ensure HTTPS protocol
+    if (userInfo.titlePhoto) {
+        const photo = document.createElement('img');
+        photo.className = 'profile-photo';
+        // Fix: Remove protocol and add https explicitly
+        const photoUrl = userInfo.titlePhoto.replace(/^(https?:)?\/\//, 'https://');
+        photo.src = photoUrl;
+        photo.alt = userInfo.handle;
+        // Set border color based on rank
+        photo.style.borderColor = colors.primary;
+        photo.onerror = function() {
+            // Fallback if image fails to load
+            this.style.display = 'none';
+        };
+        header.appendChild(photo);
     }
 
-    lazyConstruction(1);
+    // Handle
+    const handleDiv = createElement('div', 'profile-handle', userInfo.handle);
+    header.appendChild(handleDiv);
+
+    // Rating badges
+    const badgesDiv = createElement('div', 'badges-container');
+
+    if (userInfo.rating) {
+        const ratingBadge = createElement('span', 'rating-badge rating-current', `Rating: ${userInfo.rating}`);
+        badgesDiv.appendChild(ratingBadge);
+    }
+
+    if (userInfo.maxRating) {
+        const maxRatingBadge = createElement('span', 'rating-badge rating-max', `Max: ${userInfo.maxRating}`);
+        badgesDiv.appendChild(maxRatingBadge);
+    }
+
+    if (userInfo.rank) {
+        const rankBadge = createElement('span', 'rating-badge rank-badge', userInfo.rank);
+        badgesDiv.appendChild(rankBadge);
+    }
+
+    if (userInfo.maxRank && userInfo.maxRank !== userInfo.rank) {
+        const maxRankBadge = createElement('span', 'rating-badge rank-badge', `Max: ${userInfo.maxRank}`);
+        maxRankBadge.style.opacity = '0.8';
+        badgesDiv.appendChild(maxRankBadge);
+    }
+
+    header.appendChild(badgesDiv);
+    profileDiv.appendChild(header);
+
+    // Stats Grid
+    const statsGrid = createElement('div', 'stats-grid');
+
+    const uniqueSolvesCard = createStatCard(stats.uniqueSolves, 'Unique Solves');
+    const totalSubsCard = createStatCard(stats.totalSubmissions, 'Total Submissions');
+    const categoriesCard = createStatCard(stats.categories.length, 'Categories');
+
+    statsGrid.appendChild(uniqueSolvesCard);
+    statsGrid.appendChild(totalSubsCard);
+    statsGrid.appendChild(categoriesCard);
+    profileDiv.appendChild(statsGrid);
+
+    // Verdict Table
+    if (stats.verdicts.length > 0) {
+        const verdictTitle = createElement('div', 'section-title', 'Submission Verdicts');
+        profileDiv.appendChild(verdictTitle);
+
+        const verdictTable = createTable(stats.verdicts, 'Verdict', 'Count', colors.gradient);
+        profileDiv.appendChild(verdictTable);
+    }
+
+    // Category Table
+    if (stats.categories.length > 0) {
+        const categoryTitle = createElement('div', 'section-title', 'Problem Categories');
+        profileDiv.appendChild(categoryTitle);
+
+        const categoryTable = createTable(stats.categories, 'Category', 'Solves', colors.gradient);
+        profileDiv.appendChild(categoryTable);
+    }
+}
+
+// Helper: Create Stat Card
+function createStatCard(value, label) {
+    const card = createElement('div', 'stat-card');
+    const valueDiv = createElement('div', 'stat-value', value);
+    const labelDiv = createElement('div', 'stat-label', label);
+    card.appendChild(valueDiv);
+    card.appendChild(labelDiv);
+    return card;
+}
+
+// Helper: Create Table
+function createTable(data, keyHeader, valueHeader, headerColor) {
+    const table = document.createElement('table');
+
+    // Header
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    const th1 = document.createElement('th');
+    th1.textContent = keyHeader;
+    if (headerColor) th1.style.background = headerColor;
+    const th2 = document.createElement('th');
+    th2.textContent = valueHeader;
+    th2.style.textAlign = 'right';
+    if (headerColor) th2.style.background = headerColor;
+    headerRow.appendChild(th1);
+    headerRow.appendChild(th2);
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Body
+    const tbody = document.createElement('tbody');
+    data.forEach(([key, value]) => {
+        const row = document.createElement('tr');
+        const cell1 = document.createElement('td');
+        cell1.className = 'table-key';
+        cell1.textContent = key;
+        const cell2 = document.createElement('td');
+        cell2.className = 'table-value';
+        cell2.textContent = value;
+        row.appendChild(cell1);
+        row.appendChild(cell2);
+        tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+
+    return table;
 }

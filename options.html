@@ -1,28 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>User Profile</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codeforces Analytics</title>
     <link rel="stylesheet" type="text/css" href="options.css">
 </head>
 <body>
-    <div class="body-container">
-        <div style="text-align:center">
-            <form>
-                <div class="flex-container margin10">
-                    <div class="col3">
-                        <input id="handleEntry" type="text" name="search" placeholder="Handle..." style="text-align:center">
-                    </div>
-                    <div class="col1">
-                        <input id="handleSubmit" onclick="constructProfile(e)" type="submit" value="Submit">
-                    </div>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">Codeforces Analytics</h1>
+            <p class="subtitle">View your coding statistics and progress</p>
+        </header>
+
+        <div class="search-section">
+            <form id="searchForm" class="search-form">
+                <div class="input-group">
+                    <input
+                        id="handleEntry"
+                        type="text"
+                        name="search"
+                        placeholder="Enter Codeforces handle..."
+                        class="search-input"
+                        autocomplete="off"
+                        required
+                    >
+                    <button id="handleSubmit" type="submit" class="search-button">
+                        <span class="button-text">Search</span>
+                        <span class="button-loader" style="display: none;">Loading...</span>
+                    </button>
                 </div>
             </form>
         </div>
-        <div class="flex-container">
-            <div id="profileDiv" class="col1">
-            </div>
+
+        <div id="loadingState" class="loading-state" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading profile data...</p>
         </div>
+
+        <div id="errorState" class="error-state" style="display: none;">
+            <div class="error-icon">⚠</div>
+            <p class="error-message"></p>
+        </div>
+
+        <div id="profileDiv" class="profile-container"></div>
     </div>
+
+    <script src="options.js"></script>
 </body>
-<script src="options.js"></script>
 </html>
